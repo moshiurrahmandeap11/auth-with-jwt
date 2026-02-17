@@ -153,7 +153,7 @@ const ProfileWithID = () => {
                 {/* Profile Card */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     {/* Cover Photo with Role Badge */}
-                    <div className="h-32 sm:h-40 bg-gradient-to-r from-blue-500 to-blue-600 relative">
+                    <div className="h-32 sm:h-40 bg-linear-to-r from-blue-500 to-blue-600 relative">
                         <div className="absolute top-4 right-4">
                             <span className={`px-4 py-2 rounded-full text-sm font-semibold shadow-lg ${
                                 profileUser.role === 'admin' 
