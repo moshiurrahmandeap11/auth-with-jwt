@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import { AuthProvider } from "./components/authcomponents/AuthContext/AuthContext";
 import Header from "./components/shared_components/Header/Header";
 import "./globals.css";
 
@@ -23,10 +24,13 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <nav>
+        <AuthProvider>
+
+        <nav className="sticky z-50 top-0">
           <Header />
         </nav>
         {children}
+        </AuthProvider>
       </body>
     </html>
   );

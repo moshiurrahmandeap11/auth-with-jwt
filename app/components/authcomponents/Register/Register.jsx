@@ -2,16 +2,16 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import Swal from 'sweetalert2';
-
 import axiosInstance from '../../shared_components/AxiosInstance/AxiosInstance';
-import { useAuth } from '../AuthContext/AuthContext';
 
-const Login = () => {
+
+const Register = () => {
     const router = useRouter();
-    const { login } = useAuth(); // Get login function from context
     const [formData, setFormData] = useState({
+        name: '',
         email: '',
-        password: ''
+        password: '',
+        confirmPassword: ''
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -21,49 +21,61 @@ const Login = () => {
             ...formData,
             [e.target.name]: e.target.value
         });
+        // Clear error when user types
         if (error) setError('');
+    };
+
+    const validateForm = () => {
+        if (formData.password !== formData.confirmPassword) {
+            setError('Passwords do not match');
+            return false;
+        }
+        if (formData.password.length < 6) {
+            setError('Password must be at least 6 characters long');
+            return false;
+        }
+        return true;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        if (!validateForm()) return;
+        
         setLoading(true);
         setError('');
 
         try {
-            const response = await axiosInstance.post('/users/login', {
+            const response = await axiosInstance.post('/users/register', {
+                name: formData.name,
                 email: formData.email,
                 password: formData.password
             });
 
             if (response.data.success) {
-                // Use context login instead of direct localStorage
-                login(response.data.user, response.data.token);
-                
                 // Show success sweet alert
                 await Swal.fire({
                     icon: 'success',
-                    title: 'Welcome Back!',
-                    text: 'Login successful!',
-                    timer: 1500,
-                    showConfirmButton: false,
-                    background: 'white',
-                    iconColor: '#2563eb'
+                    title: 'Success!',
+                    text: 'Account created successfully!',
+                    confirmButtonColor: '#2563eb',
+                    timer: 2000,
+                    showConfirmButton: true
                 });
                 
-                // Redirect to home
-                router.push('/');
+                // Redirect to login page
+                router.push('/login');
             }
         } catch (error) {
-            const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+            const errorMessage = error.response?.data?.message || 'Registration failed. Please try again.';
             setError(errorMessage);
             
+            // Show error sweet alert
             Swal.fire({
                 icon: 'error',
-                title: 'Login Failed',
+                title: 'Oops...',
                 text: errorMessage,
-                confirmButtonColor: '#2563eb',
-                background: 'white',
-                confirmButtonText: 'Try Again'
+                confirmButtonColor: '#2563eb'
             });
         } finally {
             setLoading(false);
@@ -71,26 +83,44 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 sm:px-6 lg:px-8 py-8">
             <div className="max-w-md w-full space-y-8 bg-white p-8 sm:p-10 rounded-xl border border-gray-200 shadow-sm">
                 
-                {/* Welcome Back Text */}
+                {/* Create Account Text */}
                 <div className="text-center">
                     <h2 className="text-3xl sm:text-4xl font-bold text-blue-600">
-                        Welcome Back!
+                        Create Account
                     </h2>
                 </div>
 
-                {/* Error Message (keep for inline error, but Sweet Alert also shows) */}
+                {/* Error Message */}
                 {error && (
                     <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
                         {error}
                     </div>
                 )}
 
-                {/* Login Form */}
+                {/* Register Form */}
                 <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                     <div className="space-y-5">
+                        {/* Name Field */}
+                        <div>
+                            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                Full Name
+                            </label>
+                            <input
+                                id="name"
+                                name="name"
+                                type="text"
+                                autoComplete="name"
+                                required
+                                value={formData.name}
+                                onChange={handleChange}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700"
+                                placeholder="Enter your full name"
+                            />
+                        </div>
+
                         {/* Email Field */}
                         <div>
                             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -118,48 +148,58 @@ const Login = () => {
                                 id="password"
                                 name="password"
                                 type="password"
-                                autoComplete="current-password"
+                                autoComplete="new-password"
                                 required
                                 value={formData.password}
                                 onChange={handleChange}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700"
-                                placeholder="Enter your password"
+                                placeholder="Create a password"
+                            />
+                            <p className="mt-1 text-xs text-gray-500">
+                                Must be at least 6 characters long
+                            </p>
+                        </div>
+
+                        {/* Confirm Password Field */}
+                        <div>
+                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                                Confirm Password
+                            </label>
+                            <input
+                                id="confirmPassword"
+                                name="confirmPassword"
+                                type="password"
+                                autoComplete="new-password"
+                                required
+                                value={formData.confirmPassword}
+                                onChange={handleChange}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700"
+                                placeholder="Confirm your password"
                             />
                         </div>
                     </div>
 
-                    {/* Forgot Password Link */}
-                    <div className="flex items-center justify-end">
-                        <button
-                            type="button"
-                            onClick={() => router.push('/forgot-password')}
-                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                            Forgot Password?
-                        </button>
-                    </div>
-
-                    {/* Login Button */}
+                    {/* Register Button */}
                     <div>
                         <button
                             type="submit"
                             disabled={loading}
                             className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
-                            {loading ? 'Signing in...' : 'Sign In'}
+                            {loading ? 'Creating Account...' : 'Register'}
                         </button>
                     </div>
 
-                    {/* Register Link */}
+                    {/* Login Link */}
                     <div className="text-center mt-4">
                         <p className="text-gray-600">
-                            Don&apos;t have an account?{' '}
+                            Already have an account?{' '}
                             <button
                                 type="button"
-                                onClick={() => router.push('/register')}
+                                onClick={() => router.push('/login')}
                                 className="text-blue-600 hover:text-blue-800 font-medium"
                             >
-                                Register
+                                Login
                             </button>
                         </p>
                     </div>
@@ -169,4 +209,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default Register;
